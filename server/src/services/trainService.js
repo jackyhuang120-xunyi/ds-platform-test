@@ -27,6 +27,13 @@ class TrainService {
     const { typeId, metric, limit = 50 } = params;
     return await trainModel.getRankingData(typeId, metric, limit);
   }
+
+  async createUploadRecord(recordData, logPath) {
+    if (logPath) {
+      recordData.log = logPath;
+    }
+    return await trainModel.insertRecord(recordData);
+  }
 }
 
 export default new TrainService();

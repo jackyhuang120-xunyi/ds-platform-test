@@ -15,6 +15,11 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+// 日志中间件：监控请求进入
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // 公开路由 (无需令牌)
 app.use('/api/auth', authRoutes);

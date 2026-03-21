@@ -190,6 +190,16 @@ class TrainModel {
     const [rows] = await pool.query(sql, [parseInt(typeId), parseInt(limit)]);
     return rows;
   }
+
+  async insertRecord(data) {
+    const columns = Object.keys(data).join(', ');
+    const placeholders = Object.keys(data).map(() => '?').join(', ');
+    const sql = `INSERT INTO test_record (${columns}) VALUES (${placeholders})`;
+    
+    // 动态提取值以防 SQL 注入
+    const [result] = await pool.query(sql, Object.values(data));
+    return result.insertId;
+  }
 }
 
 export default new TrainModel();
