@@ -1,0 +1,15 @@
+# 忽略所有 Node.js 依赖
+node_modules/
+!log/**/*.csv
+
+# 忽略包含数据库密码的环境变量文件 (非常重要！)
+.env
+
+# 忽略运行日志
+logs/
+*.log
+npm-debug.log*
+
+# 忽略 OS 临时文件
+.DS_Store
+Thumbs.db
