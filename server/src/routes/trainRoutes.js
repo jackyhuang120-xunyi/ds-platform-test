@@ -6,7 +6,15 @@ import { fileURLToPath } from 'url';
 import trainController from '../controllers/trainController.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const baseLogPath = path.resolve(__dirname, '../../../log');
+// 确保相对于 server 目录或根目录都能找到 log
+const baseLogPath = path.resolve(__dirname, '../../../../log'); 
+if (!fs.existsSync(baseLogPath)) {
+    try {
+        fs.mkdirSync(baseLogPath, { recursive: true });
+    } catch (e) {
+        console.error('Failed to create base log directory:', e);
+    }
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -22,10 +30,15 @@ const storage = multer.diskStorage({
     }
     const dir = path.join(baseLogPath, dateStr);
     
-    if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir, { recursive: true });
+    try {
+        if (!fs.existsSync(dir)){
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    } catch (err) {
+        console.error('Multer destination error:', err);
+        cb(err);
     }
-    cb(null, dir);
   },
   filename: function (req, file, cb) {
     let timeStr;

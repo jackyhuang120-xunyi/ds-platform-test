@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import random
 
 def test_upload_api():
-    base_url = "http://localhost:5000/api"
+    base_url = "http://39.103.69.142:80/api"
     
     # 1. 登录获取 Token (使用 server/.env 中的管理员配置)
     print("1. 正在尝试登录获取 Token...")
@@ -16,13 +16,16 @@ def test_upload_api():
     try:
         login_res = requests.post(f"{base_url}/auth/login", json=login_data)
         if login_res.status_code != 200 or not login_res.json().get('success'):
-            print("❌ 登录失败，请检查后端运行状态和账密。")
+            print(f"❌ 登录失败，状态码: {login_res.status_code}")
+            print(f"服务器响应: {login_res.text}")
+            print("请检查后端运行状态和账密。")
             return
             
         token = login_res.json()['token']
         print("✅ 登录成功，已获取授权 Token (Bearer)。")
     except Exception as e:
-        print("❌ 请求后端接口失败，请确认后端 Node 服务已启动 (npm run dev):", e)
+        print(f"❌ 请求后端接口失败 ({base_url}/auth/login):", e)
+        print("请确认后端 Node 服务已启动并可以从外网访问。")
         return
 
     # 2. 准备上传数据 (模拟一台康复设备产生的数据)
@@ -30,7 +33,7 @@ def test_upload_api():
     begin_time = now - timedelta(minutes=5)
     
     record_data = {
-        'uid': 1,
+        'uid': 426,
         'type': 1,
         'part': 1,
         'cfg_roma': 110,

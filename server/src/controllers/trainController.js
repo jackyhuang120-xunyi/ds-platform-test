@@ -36,6 +36,10 @@ class TrainController {
   }
 
   async uploadRecord(req, res) {
+    console.log(`[DEBUG] uploadRecord - Received request, body keys:`, Object.keys(req.body));
+    if (req.file) {
+      console.log(`[DEBUG] uploadRecord - Received file:`, req.file.filename);
+    }
     try {
       if (!req.body.record_data) {
         return res.status(400).json({ success: false, message: 'Missing record_data' });
