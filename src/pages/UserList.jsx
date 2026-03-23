@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, UserPlus, ChevronRight, User, Hash, UserCircle } from 'lucide-react';
+import { Search, Filter, UserPlus, ChevronRight, User, Hash, UserCircle, Download } from 'lucide-react';
 import { userApi, commonApi } from '../services/api';
 import Pagination from '../components/Pagination';
+import CreateUserModal from '../components/CreateUserModal';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const pageSize = 12;
 
   // 搜索与筛选状态
@@ -58,6 +61,67 @@ const UserList = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchName, searchId, selectedGroup]);
+  
+  // 导出 CSV 逻辑
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      // 获取当前筛选条件下的全量数据 (不分分页)
+      const res = await userApi.getAll({ 
+        page: 1, 
+        pageSize: 100000, // 假设足够大
+        name: searchName,
+        userId: searchId,
+        groupId: selectedGroup
+      });
+      
+      const exportData = res.data || [];
+      if (exportData.length === 0) {
+        alert('当前没有可导出的数据');
+        return;
+      }
+
+      // 生成 CSV 字符串
+      const headers = ['ID', '姓名', '性别', '出生日期', '年龄', '组别', '联系电话', '证件号/编号', '身高(cm)', '体重(kg)', '备注'];
+      const csvRows = [headers.join(',')];
+
+      exportData.forEach(user => {
+        const row = [
+          user.id,
+          `"${user.name || ''}"`,
+          `"${user.gender || ''}"`,
+          `"${user.birthday ? new Date(user.birthday).toLocaleDateString() : ''}"`,
+          user.age || '',
+          `"${user.group_name || '未分配'}"`,
+          `"${user.phone || ''}"`,
+          `"${user.id_number || ''}"`,
+          user.height || '',
+          user.weight || '',
+          `"${(user.remark || '').replace(/"/g, '""')}"` // 处理备注中的双引号
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      const csvString = '\uFEFF' + csvRows.join('\n'); // 添加 BOM 以防中文乱码
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.setAttribute('href', url);
+      link.setAttribute('download', `运动员花名册_${timestamp}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (error) {
+      console.error('导出失败:', error);
+      alert('导出失败，请重试');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="page-container" style={{ animation: 'fadeIn 0.5s ease-out' }}>
@@ -66,10 +130,25 @@ const UserList = () => {
           <h2 style={{ margin: 0 }}>用户花名册</h2>
           <p style={{ color: 'var(--text-muted)', margin: '4px 0 0 0', fontSize: '14px' }}>全系统共计 {total} 名运动员</p>
         </div>
-        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <UserPlus size={18} />
-          <span>录入运动员</span>
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            className="btn btn-secondary" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            <Download size={18} />
+            <span>{isExporting ? '导出中...' : '导出列表'}</span>
+          </button>
+          <button 
+            className="btn btn-primary" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={() => setIsModalOpen(true)}
+          >
+            <UserPlus size={18} />
+            <span>录入运动员</span>
+          </button>
+        </div>
       </div>
 
       {/* 搜索与筛选区 */}
@@ -197,6 +276,12 @@ const UserList = () => {
           />
         </>
       )}
+
+      <CreateUserModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchUsers} 
+      />
     </div>
   );
 };

@@ -49,10 +49,18 @@ async function getUserGloryMoments(id) {
   return await userModel.getUserGloryMoments(id);
 }
 
+/**
+ * 创建新用户
+ */
+async function createUser(userData) {
+  return await userModel.create(userData);
+}
+
 export default {
   listUsers,
   getUserProfile,
   getUserRecords,
   getUserTrend,
-  getUserGloryMoments
+  getUserGloryMoments,
+  createUser
 };

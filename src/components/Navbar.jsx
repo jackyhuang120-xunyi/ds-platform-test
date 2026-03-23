@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { LayoutDashboard, List, Trophy, Users, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, List, Trophy, Users, LogOut, User, ArrowLeftRight } from 'lucide-react';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -37,6 +37,28 @@ const Navbar = () => {
           <User size={18} style={{ marginRight: '8px' }} />
           我的
         </NavLink>
+        <a 
+          href="http://39.103.69.142:90" 
+          className="nav-link-external"
+          title="切换到另一个项目"
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            textDecoration: 'none', 
+            color: 'var(--text-primary)',
+            padding: 'var(--spacing-sm) var(--spacing-md)',
+            borderRadius: 'var(--radius-medium)',
+            transition: 'var(--transition-smooth)',
+            fontWeight: '500',
+            marginRight: 'var(--spacing-sm)',
+            cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        >
+          <ArrowLeftRight size={18} style={{ marginRight: '8px' }} />
+          切换系统
+        </a>
         <button 
           className="nav-btn" 
           onClick={handleLogout}

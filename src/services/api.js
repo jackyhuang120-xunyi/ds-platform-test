@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // 后端 Express 地址
+  baseURL: '/api', // 使用相对路径，以便反向代理生效
   timeout: 5000,
 });
 
@@ -41,6 +41,7 @@ export const userApi = {
   getRecords: (id, params) => api.get(`/users/${id}/records`, { params }),
   getTrend: (id, params) => api.get(`/users/${id}/trend`, { params }),
   getGloryMoments: (id) => api.get(`/users/${id}/glory`),
+  create: (data) => api.post('/users', data),
 };
 
 export const trainApi = {

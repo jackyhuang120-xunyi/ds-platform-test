@@ -23,8 +23,16 @@ class UserModel {
     }
 
     const [rows] = await pool.query(`
-      SELECT uv.*, g.name as group_name 
+      SELECT 
+        uv.*, 
+        g.name as group_name,
+        u.phone, 
+        u.birthday, 
+        u.remark, 
+        u.id_number,
+        u.description
       FROM user_view uv
+      JOIN \`user\` u ON uv.id = u.id
       LEFT JOIN \`group\` g ON uv.\`group\` = g.id
       ${whereClause}
       ORDER BY uv.id ASC
@@ -215,6 +223,31 @@ class UserModel {
       LIMIT ?
     `, [uid, parseInt(typeId), parseInt(limit)]);
     return rows;
+  }
+
+  /**
+   * 创建新用户
+   */
+  async create(userData) {
+    const { 
+      name, gender, age, height, weight, 
+      phone, id_number, group, birthday, 
+      remark, description 
+    } = userData;
+
+    const [result] = await pool.query(`
+      INSERT INTO \`user\` (
+        name, gender, age, height, weight, 
+        phone, id_number, \`group\`, birthday, 
+        remark, description
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      name, gender, age, height, weight, 
+      phone, id_number, group, birthday, 
+      remark, description
+    ]);
+
+    return result.insertId;
   }
 }
 

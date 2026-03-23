@@ -75,6 +75,20 @@ class UserController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  // 创建新用户：POST /api/users
+  async createUser(req, res) {
+    try {
+      const userData = req.body;
+      if (!userData.name) {
+        return res.status(400).json({ message: '姓名不能为空' });
+      }
+      const userId = await userService.createUser(userData);
+      res.status(201).json({ id: userId, message: '用户创建成功' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
 
 export default new UserController();
