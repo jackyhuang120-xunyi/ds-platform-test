@@ -59,8 +59,18 @@ class TrainController {
         logPath = `./log/${dateStr}/${req.file.filename}`;
       }
 
-      const insertId = await trainService.createUploadRecord(recordData, logPath);
-      res.status(200).json({ success: true, message: 'Upload success', id: insertId });
+      const result = await trainService.createUploadRecord(recordData, logPath);
+      
+      if (result.isDuplicate) {
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Record already exists', 
+          id: result.id,
+          isDuplicate: true 
+        });
+      }
+
+      res.status(200).json({ success: true, message: 'Upload success', id: result.id });
     } catch (error) {
       console.error(`[DEBUG] uploadRecord Error: ${error.message}`);
       res.status(500).json({ success: false, error: error.message });

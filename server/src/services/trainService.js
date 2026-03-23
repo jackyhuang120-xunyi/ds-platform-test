@@ -29,10 +29,17 @@ class TrainService {
   }
 
   async createUploadRecord(recordData, logPath) {
+    // 1. 预检是否存在相同记录 (uid + begin_time)
+    const existingId = await trainModel.findExistingRecord(recordData.uid, recordData.begin_time);
+    if (existingId) {
+      return { id: existingId, isDuplicate: true };
+    }
+
     if (logPath) {
       recordData.log = logPath;
     }
-    return await trainModel.insertRecord(recordData);
+    const insertId = await trainModel.insertRecord(recordData);
+    return { id: insertId, isDuplicate: false };
   }
 }
 

@@ -196,9 +196,14 @@ class TrainModel {
     const placeholders = Object.keys(data).map(() => '?').join(', ');
     const sql = `INSERT INTO test_record (${columns}) VALUES (${placeholders})`;
     
-    // 动态提取值以防 SQL 注入
     const [result] = await pool.query(sql, Object.values(data));
     return result.insertId;
+  }
+
+  async findExistingRecord(uid, beginTime) {
+    const sql = `SELECT id FROM test_record WHERE uid = ? AND begin_time = ? LIMIT 1`;
+    const [rows] = await pool.query(sql, [uid, beginTime]);
+    return rows.length > 0 ? rows[0].id : null;
   }
 }
 
