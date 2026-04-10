@@ -9,5 +9,6 @@ router.get('/:id/records', userController.getUserRecords);
 router.get('/:id/trend', userController.getUserTrend);
 router.get('/:id/glory', userController.getUserGloryMoments);
 router.post('/', userController.createUser);
+router.put('/:id', userController.updateUser);
 
 export default router;

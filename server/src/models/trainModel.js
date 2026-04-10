@@ -86,7 +86,7 @@ class TrainModel {
         tr.cfg_group,
         tr.cfg_rest_time
       ${sql} 
-      ORDER BY ${sortBy} ${sortOrder} 
+      ORDER BY ${sortBy} ${sortOrder}, tr.id DESC
       LIMIT ? OFFSET ?
     `;
     const countSql = `SELECT COUNT(*) as total ${sql}`;
@@ -106,6 +106,7 @@ class TrainModel {
         COALESCE(TIMESTAMPDIFF(YEAR, u.birthday, tr.begin_time), u.age) AS age,
         u.height,
         u.weight,
+        u.gender,
         g.name AS gender_name,
         gp.name AS group_name,
         tt.name AS type_name,

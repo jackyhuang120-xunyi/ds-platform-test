@@ -19,6 +19,7 @@ class CommonController {
       const [groups] = await pool.query('SELECT id, name FROM `group`');
       const [types] = await pool.query('SELECT id, name FROM test_type');
       const [parts] = await pool.query('SELECT id, name FROM body_part');
+      const [genders] = await pool.query('SELECT id, name FROM gender');
 
       // 2. 计算 99% 分位数基准 (Baselines)
       const getP99 = async (metric, typeId) => {
@@ -60,13 +61,15 @@ class CommonController {
         groups,
         types,
         parts,
+        genders,
         baselines: {
           isokinetic_con: isoKConP99 || 220,
           isokinetic_ecc: isoKEccP99 || 220,
           isotonic_speed: isoTSpeedP99 || 1000,
           isometric_stre: isoMStreP99 || 220,
           activity: activityP99 || 50
-        }
+        },
+        serverTime: new Date().toISOString()
       });
     } catch (error) {
       res.status(500).json({ error: error.message });

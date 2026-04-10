@@ -1,4 +1,5 @@
 import trainService from '../services/trainService.js';
+import userService from '../services/userService.js';
 
 class TrainController {
   async getRecords(req, res) {
@@ -36,12 +37,12 @@ class TrainController {
   }
 
   async uploadRecord(req, res) {
-    console.log(`[DEBUG] uploadRecord - Received request, body keys:`, Object.keys(req.body));
+    console.log(`[DEBUG] uploadRecord - Received request, body keys:`, Object.keys(req.body || {}));
     if (req.file) {
       console.log(`[DEBUG] uploadRecord - Received file:`, req.file.filename);
     }
     try {
-      if (!req.body.record_data) {
+      if (!req.body || !req.body.record_data) {
         return res.status(400).json({ success: false, message: 'Missing record_data' });
       }
 
@@ -52,28 +53,42 @@ class TrainController {
         return res.status(400).json({ success: false, message: 'Invalid JSON in record_data' });
       }
 
+      // --- 阶段 1：用户有效性校验 ---
+      const user = await userService.getUserProfile(recordData.uid);
+      if (!user) {
+        return res.status(404).json({ success: false, message: '上传失败：目标用户 ID 不存在' });
+      }
+
       let logPath = null;
       if (req.file) {
-        const today = new Date();
-        const dateStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+        let dateStr;
+        if (recordData.begin_time) {
+          dateStr = recordData.begin_time.split(' ')[0];
+        } else {
+          const today = new Date();
+          dateStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+        }
         logPath = `./log/${dateStr}/${req.file.filename}`;
       }
 
+      // --- 阶段 2 & 3：记录排重 (幂等) 与存盘入库 ---
       const result = await trainService.createUploadRecord(recordData, logPath);
       
       if (result.isDuplicate) {
+        // 幂等命中：告知同步引擎“我已经有了，你可以删掉本地任务了”
         return res.status(200).json({ 
           success: true, 
-          message: 'Record already exists', 
+          message: '记录已存在', 
           id: result.id,
           isDuplicate: true 
         });
       }
 
-      res.status(200).json({ success: true, message: 'Upload success', id: result.id });
+      // 首次物理录入成功
+      res.status(201).json({ success: true, message: '记录上传成功', id: result.id });
     } catch (error) {
       console.error(`[DEBUG] uploadRecord Error: ${error.message}`);
-      res.status(500).json({ success: false, error: error.message });
+      res.status(500).json({ success: false, status: 'error', message: error.message });
     }
   }
 }

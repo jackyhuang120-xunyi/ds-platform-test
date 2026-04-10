@@ -50,10 +50,26 @@ async function getUserGloryMoments(id) {
 }
 
 /**
- * 创建新用户
+ * 幂等创建新用户：插入前先查重指纹 (姓名+生日)
+ * 返回 { id, isNew, data? }
  */
-async function createUser(userData) {
-  return await userModel.create(userData);
+async function idempotentCreate(userData) {
+  const { name, birthday } = userData;
+  const existingUser = await userModel.findByFingerprint(name, birthday);
+  
+  if (existingUser) {
+    return { id: existingUser.id, isNew: false, data: existingUser };
+  }
+
+  const insertId = await userModel.create(userData);
+  return { id: insertId, isNew: true };
+}
+
+/**
+ * 全量更新用户信息
+ */
+async function updateUser(id, userData) {
+  return await userModel.update(id, userData);
 }
 
 export default {
@@ -62,5 +78,6 @@ export default {
   getUserRecords,
   getUserTrend,
   getUserGloryMoments,
-  createUser
+  idempotentCreate,
+  updateUser
 };

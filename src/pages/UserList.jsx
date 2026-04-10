@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Filter, UserPlus, ChevronRight, User, Hash, UserCircle, Download } from 'lucide-react';
 import { userApi, commonApi } from '../services/api';
+import { useMetaData } from '../context/MetadataContext';
 import Pagination from '../components/Pagination';
 import CreateUserModal from '../components/CreateUserModal';
 
@@ -11,6 +12,7 @@ const UserList = () => {
   const [total, setTotal] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const { getLabel } = useMetaData();
   const pageSize = 12;
 
   // 搜索与筛选状态
@@ -86,10 +88,11 @@ const UserList = () => {
       const csvRows = [headers.join(',')];
 
       exportData.forEach(user => {
+        const genderLabel = getLabel('genders', user.gender);
         const row = [
           user.id,
           `"${user.name || ''}"`,
-          `"${user.gender || ''}"`,
+          `"${genderLabel}"`,
           `"${user.birthday ? new Date(user.birthday).toLocaleDateString() : ''}"`,
           user.age || '',
           `"${user.group_name || '未分配'}"`,
@@ -195,57 +198,62 @@ const UserList = () => {
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-            {users.map(user => (
-              <div key={user.id} className="card user-card" style={{ padding: '24px', transition: 'all 0.3s' }}>
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-                  <div style={{ 
-                    width: '64px', 
-                    height: '64px', 
-                    borderRadius: '16px', 
-                    background: user.gender === '男' 
-                      ? 'rgba(0, 122, 255, 0.15)' 
-                      : user.gender === '女' 
-                        ? 'rgba(255, 45, 85, 0.15)' 
-                        : 'var(--bg-tertiary)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    border: user.gender === '男' 
-                      ? '1px solid rgba(0, 122, 255, 0.3)' 
-                      : user.gender === '女' 
-                        ? '1px solid rgba(255, 45, 85, 0.3)' 
-                        : '1px solid rgba(255, 255, 255, 0.05)',
-                    boxShadow: user.gender === '男' 
-                      ? '0 0 15px rgba(0, 122, 255, 0.1)' 
-                      : user.gender === '女' 
-                        ? '0 0 15px rgba(255, 45, 85, 0.1)' 
-                        : 'none'
-                  }}>
-                    <User 
-                      size={32} 
-                      color={user.gender === '男' ? '#007AFF' : user.gender === '女' ? '#FF2D55' : 'var(--primary-color)'} 
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <h4 style={{ margin: 0, fontSize: '18px' }}>{user.name}</h4>
-                      <span style={{ 
-                        fontSize: '11px', 
-                        padding: '2px 8px', 
-                        borderRadius: '6px', 
-                        background: user.gender === '男' ? '#007AFF' : '#FF2D55',
-                        color: '#FFFFFF',
-                        fontWeight: '700',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-                      }}>
-                        {user.gender || '未知'}
+            {users.map(user => {
+              const genderText = getLabel('genders', user.gender);
+              const isMale = genderText === '男';
+              const isFemale = genderText === '女';
+
+              return (
+                <div key={user.id} className="card user-card" style={{ padding: '24px', transition: 'all 0.3s' }}>
+                  <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+                    <div style={{ 
+                      width: '64px', 
+                      height: '64px', 
+                      borderRadius: '16px', 
+                      background: isMale 
+                        ? 'rgba(0, 122, 255, 0.15)' 
+                        : isFemale 
+                          ? 'rgba(255, 45, 85, 0.15)' 
+                          : 'var(--bg-tertiary)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      border: isMale 
+                        ? '1px solid rgba(0, 122, 255, 0.3)' 
+                        : isFemale 
+                          ? '1px solid rgba(255, 45, 85, 0.3)' 
+                          : '1px solid rgba(255, 255, 255, 0.05)',
+                      boxShadow: isMale 
+                        ? '0 0 15px rgba(0, 122, 255, 0.1)' 
+                        : isFemale 
+                          ? '0 0 15px rgba(255, 45, 85, 0.1)' 
+                          : 'none'
+                    }}>
+                      <User 
+                        size={32} 
+                        color={isMale ? '#007AFF' : isFemale ? '#FF2D55' : 'var(--primary-color)'} 
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <h4 style={{ margin: 0, fontSize: '18px' }}>{user.name}</h4>
+                        <span style={{ 
+                          fontSize: '11px', 
+                          padding: '2px 8px', 
+                          borderRadius: '6px', 
+                          background: isMale ? '#007AFF' : isFemale ? '#FF2D55' : 'var(--text-disabled)',
+                          color: '#FFFFFF',
+                          fontWeight: '700',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                        }}>
+                          {genderText}
+                        </span>
+                      </div>
+                      <span className="role-badge user" style={{ fontSize: '12px' }}>
+                        {user.group_name || '未分配组别'}
                       </span>
                     </div>
-                    <span className="role-badge user" style={{ fontSize: '12px' }}>
-                      {user.group_name || '未分配组别'}
-                    </span>
                   </div>
-                </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                   <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>ID: <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{user.id}</span></div>
@@ -254,18 +262,19 @@ const UserList = () => {
                   <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>体重: <span style={{ color: 'var(--text-primary)' }}>{user.weight || '--'}kg</span></div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
-                  <button 
-                    className="btn btn-secondary btn-sm" 
-                    style={{ padding: '8px 16px', width: '100%', justifyContent: 'center' }}
-                    onClick={() => window.location.href = `/user-summary/${user.id}`}
-                  >
-                    <span>查看完整档案</span>
-                    <ChevronRight size={14} />
-                  </button>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
+                    <button 
+                      className="btn btn-secondary btn-sm" 
+                      style={{ padding: '8px 16px', width: '100%', justifyContent: 'center' }}
+                      onClick={() => window.location.href = `/user-summary/${user.id}`}
+                    >
+                      <span>查看完整档案</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <Pagination 

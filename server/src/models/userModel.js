@@ -9,38 +9,49 @@ class UserModel {
     let whereClause = 'WHERE 1=1';
     const params = [];
 
-    if (filters.name) {
-      whereClause += ' AND uv.name LIKE ?';
-      params.push(`%${filters.name}%`);
-    }
-    if (filters.userId) {
-      whereClause += ' AND uv.id = ?';
-      params.push(filters.userId);
-    }
-    if (filters.groupId && filters.groupId !== 'all') {
-      whereClause += ' AND uv.`group` = ?';
-      params.push(filters.groupId);
+    if (filters.name && filters.birthday) {
+      // 场景：身份锚定（精准匹配）
+      whereClause += ' AND u.name = ? AND u.birthday = ?';
+      params.push(filters.name, filters.birthday);
+    } else {
+      // 场景：普通搜索（模糊匹配）
+      if (filters.name) {
+        whereClause += ' AND u.name LIKE ?';
+        params.push(`%${filters.name}%`);
+      }
+      if (filters.userId) {
+        whereClause += ' AND u.id = ?';
+        params.push(filters.userId);
+      }
+      if (filters.groupId && filters.groupId !== 'all') {
+        whereClause += ' AND u.`group` = ?';
+        params.push(filters.groupId);
+      }
     }
 
     const [rows] = await pool.query(`
       SELECT 
-        uv.*, 
-        g.name as group_name,
-        u.phone, 
-        u.birthday, 
-        u.remark, 
+        u.id, 
+        u.name, 
+        u.gender, 
+        u.age, 
+        u.height, 
+        u.weight,
+        u.birthday,
+        u.phone,
         u.id_number,
-        u.description
-      FROM user_view uv
-      JOIN \`user\` u ON uv.id = u.id
-      LEFT JOIN \`group\` g ON uv.\`group\` = g.id
+        u.remark,
+        u.description,
+        g.name as group_name
+      FROM \`user\` u
+      LEFT JOIN \`group\` g ON u.\`group\` = g.id
       ${whereClause}
-      ORDER BY uv.id ASC
+      ORDER BY u.id ASC
       LIMIT ? OFFSET ?
     `, [...params, parseInt(pageSize), parseInt(offset)]);
 
     const [[{ total }]] = await pool.query(`
-      SELECT COUNT(*) as total FROM user_view uv ${whereClause}
+      SELECT COUNT(*) as total FROM \`user\` u ${whereClause}
     `, params);
     
     return { data: rows, total };
@@ -51,10 +62,10 @@ class UserModel {
    */
   async getUserById(id) {
     const [rows] = await pool.query(`
-      SELECT uv.*, g.name as group_name
-      FROM user_view uv
-      LEFT JOIN \`group\` g ON uv.\`group\` = g.id
-      WHERE uv.id = ?
+      SELECT u.*, g.name as group_name
+      FROM \`user\` u
+      LEFT JOIN \`group\` g ON u.\`group\` = g.id
+      WHERE u.id = ?
     `, [id]);
     return rows[0];
   }
@@ -248,6 +259,41 @@ class UserModel {
     ]);
 
     return result.insertId;
+  }
+
+  /**
+   * 根据指纹（姓名+生日）查找唯一用户
+   */
+  async findByFingerprint(name, birthday) {
+    const [rows] = await pool.query(`
+      SELECT * FROM \`user\` WHERE name = ? AND birthday = ? LIMIT 1
+    `, [name, birthday]);
+    return rows[0];
+  }
+
+  /**
+   * 全量覆盖更新用户档案
+   */
+  async update(id, userData) {
+    const { 
+      name, gender, age, height, weight, 
+      phone, id_number, group, birthday, 
+      remark, description 
+    } = userData;
+
+    await pool.query(`
+      UPDATE \`user\` SET 
+        name = ?, gender = ?, age = ?, height = ?, weight = ?, 
+        phone = ?, id_number = ?, \`group\` = ?, birthday = ?, 
+        remark = ?, description = ?
+      WHERE id = ?
+    `, [
+      name, gender, age, height, weight, 
+      phone, id_number, group, birthday, 
+      remark, description,
+      id
+    ]);
+    return true;
   }
 }
 

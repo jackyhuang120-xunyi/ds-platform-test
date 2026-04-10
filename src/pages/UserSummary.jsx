@@ -12,6 +12,7 @@ import {
   Trophy, Medal, Target, ArrowUpDown
 } from 'lucide-react';
 import { userApi, trainApi } from '../services/api';
+import { useMetaData } from '../context/MetadataContext';
 import { format, differenceInDays } from 'date-fns';
 import Pagination from '../components/Pagination';
 
@@ -352,10 +353,10 @@ const TrendSection = ({ userId }) => {
 const UserSummary = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { getLabel, metadata: globalMetadata, loading: metaLoading } = useMetaData();
   const [user, setUser] = useState(null);
   const [glory, setGlory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [metadata, setMetadata] = useState({ types: [], parts: [] });
 
   // 列表相关
   const [recordsPage, setRecordsPage] = useState(1);
@@ -387,12 +388,11 @@ const UserSummary = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const [u, m, g] = await Promise.all([
+        const [u, g] = await Promise.all([
           userApi.getById(id),
-          trainApi.getMetadata(),
           userApi.getGloryMoments(id)
         ]);
-        setUser(u); setMetadata(m); setGlory(g || []);
+        setUser(u); setGlory(g || []);
         if (u?.recentRecords) { setRecordsData(u.recentRecords.data); setRecordsTotal(u.recentRecords.total); }
       } catch (err) { console.error(err); } finally { setLoading(false); }
     };
@@ -425,16 +425,19 @@ const UserSummary = () => {
     }
   }, [recordsPage]);
 
-  if (loading) return <div className="page-loading"><div className="spinner" /></div>;
+  if (loading || metaLoading) return <div className="page-loading"><div className="spinner" /></div>;
   if (!user) return <div className="page-empty">用户数据丢失</div>;
 
   const { stats, pb } = user;
-  const genderColor = user.gender === '男' ? '#007AFF' : user.gender === '女' ? '#FF2D55' : '#8E8E93';
+  const genderText = getLabel('genders', user.gender);
+  const isMale = genderText === '男';
+  const isFemale = genderText === '女';
+  const genderColor = isMale ? '#007AFF' : isFemale ? '#FF2D55' : '#8E8E93';
 
   // 雷达：规范化处理
   const radarData = (() => {
     const k = pb?.[1] || {}, t = pb?.[2] || {}, m = pb?.[3] || {};
-    const bl = metadata.baselines || { isokinetic_con: 220, isokinetic_ecc: 220, isotonic_speed: 1000, isometric_stre: 220, activity: 50 };
+    const bl = globalMetadata?.baselines || { isokinetic_con: 220, isokinetic_ecc: 220, isotonic_speed: 1000, isometric_stre: 220, activity: 50 };
     const norm = (v, max) => Math.min(120, Math.round((parseFloat(v) || 0) / max * 100)); // 允许超过100%一点点以展示突破
     return [
       { subject: '等速向心力量', A: norm(k.max_con_stre_max, bl.isokinetic_con), Full: 100 },
@@ -454,7 +457,7 @@ const UserSummary = () => {
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
               <h1 style={{ fontSize: '36px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{user.name}</h1>
-              <span style={{ padding: '6px 16px', borderRadius: '24px', fontSize: '14px', fontWeight: '700', background: `${genderColor}20`, color: genderColor }}>{user.gender}</span>
+              <span style={{ padding: '6px 16px', borderRadius: '24px', fontSize: '14px', fontWeight: '700', background: `${genderColor}20`, color: genderColor }}>{genderText}</span>
               <span style={{ color: 'var(--text-disabled)', fontSize: '14px' }}>#{user.id}</span>
             </div>
             <div style={{ display: 'flex', gap: '32px', color: 'var(--text-muted)' }}>
@@ -600,8 +603,8 @@ const UserSummary = () => {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-          <div className="filter-group"><label>测试类型</label><select value={filters.typeId} onChange={e => setFilters({ ...filters, typeId: e.target.value })}><option value="all">所有类型</option>{metadata.types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
-          <div className="filter-group"><label>测试部位</label><select value={filters.partId} onChange={e => setFilters({ ...filters, partId: e.target.value })}><option value="all">所有部位</option>{metadata.parts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+          <div className="filter-group"><label>测试类型</label><select value={filters.typeId} onChange={e => setFilters({ ...filters, typeId: e.target.value })}><option value="all">所有类型</option>{(globalMetadata?.types || []).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+          <div className="filter-group"><label>测试部位</label><select value={filters.partId} onChange={e => setFilters({ ...filters, partId: e.target.value })}><option value="all">所有部位</option>{(globalMetadata?.parts || []).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
           <div className="filter-group"><label>起止时间</label><input type="date" value={filters.startDate} onChange={e => setFilters({ ...filters, startDate: e.target.value })} /></div>
           <div className="filter-group"><label>&nbsp;</label><input type="date" value={filters.endDate} onChange={e => setFilters({ ...filters, endDate: e.target.value })} /></div>
         </div>

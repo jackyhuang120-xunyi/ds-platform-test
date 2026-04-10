@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import ReactECharts from 'echarts-for-react';
 import { Columns, GitCompare, ChevronLeft, User, Activity, Info } from 'lucide-react';
 import { trainApi } from '../services/api';
+import { useMetaData } from '../context/MetadataContext';
 
 // ============================================================================
 // 专业滤波器实现：二阶巴特沃斯低通滤波器 (Butterworth Filter)
@@ -54,6 +55,7 @@ const formatVal = (val, isNumeric = false) => {
 
 const TrainComparison = () => {
   const location = useLocation();
+  const { getLabel, loading: metaLoading } = useMetaData();
   const [loading, setLoading] = useState(true);
   const [compareRecords, setCompareRecords] = useState([]);
   const [chartSource, setChartSource] = useState({ series: [], timeline: [] });
@@ -207,7 +209,7 @@ const TrainComparison = () => {
     };
   }, [chartSource, typeInfo]);
 
-  if (loading) return <div className="page-container" style={{ textAlign: 'center', padding: '100px' }}>正在聚合多维分析数据...</div>;
+  if (loading || metaLoading) return <div className="page-container" style={{ textAlign: 'center', padding: '100px' }}>正在聚合多维分析数据...</div>;
 
   return (
     <div className="page-container" style={{ animation: 'fadeIn 0.5s ease-out', maxWidth: '1440px', margin: '0 auto', padding: '24px' }}>
@@ -236,7 +238,7 @@ const TrainComparison = () => {
             </thead>
             <tbody>
               <CompareRow label="姓名" field="user_name" records={compareRecords} />
-              <CompareRow label="性别" field="gender_name" records={compareRecords} />
+              <CompareRow label="性别" calc={r => getLabel('genders', r.gender)} records={compareRecords} />
               <CompareRow label="年龄 (岁)" field="age" records={compareRecords} />
               <CompareRow label="身高 (cm)" field="height" records={compareRecords} />
               <CompareRow label="体重 (kg)" field="weight" records={compareRecords} />

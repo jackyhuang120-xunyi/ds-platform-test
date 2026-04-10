@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import TrainDetail from './pages/TrainDetail';
 import TrainComparison from './pages/TrainComparison';
 import './App.css';
+import { MetadataProvider } from './context/MetadataContext';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -30,25 +31,27 @@ const Layout = ({ children }) => (
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* 基础路由 */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
-        {/* 核心业务路由 - 受到保护 */}
-        <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-        <Route path="/train-list" element={<ProtectedRoute><Layout><TrainList /></Layout></ProtectedRoute>} />
-        <Route path="/ranking" element={<ProtectedRoute><Layout><Ranking /></Layout></ProtectedRoute>} />
-        <Route path="/user-list" element={<ProtectedRoute><Layout><UserList /></Layout></ProtectedRoute>} />
-        <Route path="/user-summary/:id" element={<ProtectedRoute><Layout><UserSummary /></Layout></ProtectedRoute>} />
-        <Route path="/train-detail/:id" element={<ProtectedRoute><Layout><TrainDetail /></Layout></ProtectedRoute>} />
-        <Route path="/comparison" element={<ProtectedRoute><Layout><TrainComparison /></Layout></ProtectedRoute>} />
-        
-        {/* 404 处理 */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Router>
+    <MetadataProvider>
+      <Router>
+        <Routes>
+          {/* 基础路由 */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          {/* 核心业务路由 - 受到保护 */}
+          <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+          <Route path="/train-list" element={<ProtectedRoute><Layout><TrainList /></Layout></ProtectedRoute>} />
+          <Route path="/ranking" element={<ProtectedRoute><Layout><Ranking /></Layout></ProtectedRoute>} />
+          <Route path="/user-list" element={<ProtectedRoute><Layout><UserList /></Layout></ProtectedRoute>} />
+          <Route path="/user-summary/:id" element={<ProtectedRoute><Layout><UserSummary /></Layout></ProtectedRoute>} />
+          <Route path="/train-detail/:id" element={<ProtectedRoute><Layout><TrainDetail /></Layout></ProtectedRoute>} />
+          <Route path="/comparison" element={<ProtectedRoute><Layout><TrainComparison /></Layout></ProtectedRoute>} />
+          
+          {/* 404 处理 */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Router>
+    </MetadataProvider>
   );
 }
 

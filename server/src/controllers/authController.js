@@ -18,7 +18,8 @@ const login = async (req, res) => {
     return res.json({
       success: true,
       message: '登录成功',
-      token
+      token,
+      serverTime: new Date().toISOString()
     });
   }
 

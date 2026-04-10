@@ -1,7 +1,6 @@
 # Logs (忽略通用日志，但保留业务数据)
 logs
 *.log
-!log/**/*.csv
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -23,3 +22,27 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ── 本地调试脚本（不需要上线）──────────────────────────────
+test_csv_upload.py
+test_sync_api.py
+test_upload_api.py
+simulate_upload.py
+verify_idempotency.py
+replace_script*.py
+
+# ── 本地写作文档（毕设/项目文档，不属于代码仓库）───────────
+project_introduction.md
+project_introduction_v2.md
+project_introduction_v2*.md
+project_file_inventory.md
+comparison_technical_spec.md
+ranking_technical_spec.md
+data_specification.md
+data_specification_v2.md
+docs_v1/
+docs_v2/
+
+# ── 训练数据文件（保留用于曲线绘制）────────────────────────
+!log/**/*.csv
+!test.csv

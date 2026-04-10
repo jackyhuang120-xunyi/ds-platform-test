@@ -7,7 +7,7 @@ import trainController from '../controllers/trainController.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // 确保相对于 server 目录或根目录都能找到 log
-const baseLogPath = path.resolve(__dirname, '../../../../log'); 
+const baseLogPath = path.resolve(__dirname, '../../../log'); 
 if (!fs.existsSync(baseLogPath)) {
     try {
         fs.mkdirSync(baseLogPath, { recursive: true });

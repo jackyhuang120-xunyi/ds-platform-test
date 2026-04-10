@@ -6,7 +6,9 @@ import userRoutes from './src/routes/userRoutes.js';
 import trainRoutes from './src/routes/trainRoutes.js';
 import commonRoutes from './src/routes/commonRoutes.js';
 import authRoutes from './src/routes/authRoutes.js';
+import syncRoutes from './src/routes/syncRoutes.js';
 import authMiddleware from './src/middleware/authMiddleware.js';
+import deviceKeyMiddleware from './src/middleware/deviceKeyMiddleware.js';
 
 dotenv.config();
 
@@ -23,6 +25,8 @@ app.use((req, res, next) => {
 
 // 公开路由 (无需令牌)
 app.use('/api/auth', authRoutes);
+// 平板端离线同步接口（需携带设备密钥 X-Device-Key，无需 JWT）
+app.use('/api/sync', deviceKeyMiddleware, syncRoutes);
 
 // 需要身份验证的路由 (保镖拦截)
 app.use('/api/users', authMiddleware, userRoutes);
