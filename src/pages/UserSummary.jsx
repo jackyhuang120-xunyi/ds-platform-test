@@ -526,7 +526,7 @@ const UserSummary = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '24px', marginBottom: '32px' }}>
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800' }}><Award size={22} color="#FFD700" style={{ verticalAlign: 'bottom', marginRight: '8px' }} /> 专家指标矩阵</h3>
+            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800' }}><Award size={22} color="#FFD700" style={{ verticalAlign: 'bottom', marginRight: '8px' }} /> 最佳数据详情</h3>
             <span style={{ fontSize: '13px', color: 'var(--text-disabled)' }}><Info size={14} style={{ verticalAlign: 'text-bottom' }} /> 相对指标已根据最新体重同步计算</span>
           </div>
           <PBPanel pb={pb || {}} weight={user.weight} />

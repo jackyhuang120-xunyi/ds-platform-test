@@ -1,5 +1,7 @@
 import userService from '../services/userService.js';
 import trainService from '../services/trainService.js';
+import groupService from '../services/groupService.js';
+import pool from '../config/db.js';
 import path from 'path';
 
 class SyncController {
@@ -24,6 +26,12 @@ class SyncController {
     let userInfo;
     try {
       userInfo = JSON.parse(req.body.user_info);
+      // 自动清洗：把值为空字符串的字段直接去掉
+      for (const key in userInfo) {
+        if (userInfo[key] === "") {
+          delete userInfo[key];
+        }
+      }
     } catch (e) {
       return res.status(400).json({ success: false, message: 'Invalid JSON in user_info' });
     }
@@ -35,6 +43,31 @@ class SyncController {
       });
     }
 
+    // ── 阶段 1.5：自动将中文文本映射为数据库整数 ID ────────────────
+    // 平板端可能传 gender="男" 而非 gender=1，此处自动转换
+    if (userInfo.gender && typeof userInfo.gender === 'string' && isNaN(userInfo.gender)) {
+      try {
+        const [gRows] = await pool.query('SELECT id FROM gender WHERE name = ? LIMIT 1', [userInfo.gender]);
+        userInfo.gender = gRows.length > 0 ? gRows[0].id : null;
+        console.log(`[SYNC] gender 文本映射: "${userInfo.gender}" → ${userInfo.gender}`);
+      } catch (e) {
+        console.warn(`[SYNC] gender 映射失败，置空:`, e.message);
+        userInfo.gender = null;
+      }
+    }
+
+    // 平板端可能传 group="测试组" 而非 group=1，此处自动转换，遇到未知组别则自动创建
+    if (userInfo.group && typeof userInfo.group === 'string' && isNaN(userInfo.group)) {
+      try {
+        const groupId = await groupService.findOrCreate(userInfo.group);
+        console.log(`[SYNC] group 文本映射: "${userInfo.group}" → ${groupId}`);
+        userInfo.group = groupId;
+      } catch (e) {
+        console.warn(`[SYNC] group 映射/创建失败，置空:`, e.message);
+        userInfo.group = null;
+      }
+    }
+
     // ── 阶段 2：解析 record_info ────────────────────────────────────
     if (!req.body.record_info) {
       return res.status(400).json({ success: false, message: 'Missing record_info' });
@@ -43,6 +76,12 @@ class SyncController {
     let recordInfo;
     try {
       recordInfo = JSON.parse(req.body.record_info);
+      // 自动清洗：把值为空字符串的字段直接去掉
+      for (const key in recordInfo) {
+        if (recordInfo[key] === "") {
+          delete recordInfo[key];
+        }
+      }
     } catch (e) {
       return res.status(400).json({ success: false, message: 'Invalid JSON in record_info' });
     }

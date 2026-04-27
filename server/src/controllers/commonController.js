@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import groupService from '../services/groupService.js';
 
 class CommonController {
   async getGroups(req, res) {
@@ -7,6 +8,19 @@ class CommonController {
       res.json(rows);
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  async createGroup(req, res) {
+    try {
+      const { name } = req.body;
+      if (!name) {
+        return res.status(400).json({ success: false, message: '组别名称不能为空' });
+      }
+      const group = await groupService.createGroup(name);
+      res.status(201).json({ success: true, group });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 
